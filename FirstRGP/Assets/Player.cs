@@ -5,7 +5,6 @@ using UnityEngine;
 public class Player : MonoBehaviour
 {
     private Rigidbody2D rb;
-
     private Animator anim;
 
     [SerializeField] private float moveSpeed;
@@ -14,7 +13,16 @@ public class Player : MonoBehaviour
     [Header("Dash Infor")]
     [SerializeField] private float dashSpeed;
     [SerializeField] private float dashDuration;
-    [SerializeField] private float dashTime;
+    private float dashTime;
+
+    [SerializeField] private float dashCooldown;
+    private float dashCooldownTimer;
+
+    [Header("Attack Infor")]
+    [SerializeField] private float comboTime;
+    private float comboTimeCounter;
+    private bool isAttacking;
+    private int comboCounter;
 
     private float xInput;
 
@@ -43,10 +51,9 @@ public class Player : MonoBehaviour
         CheckCollisionGround();
 
         dashTime -= Time.deltaTime;
-        if(Input.GetKeyDown(KeyCode.LeftShift))
-        {
-            dashTime = dashDuration;
-        }
+        dashCooldownTimer -= Time.deltaTime;
+        comboTimeCounter -= Time.deltaTime;
+        
 
         FlipController();
 
@@ -55,9 +62,13 @@ public class Player : MonoBehaviour
 
     private void Movement()
     {
-        if(dashTime > 0)
+        if(isAttacking)
         {
-            rb.velocity = new Vector2(xInput * dashSpeed, 0);
+            rb.velocity = new Vector2(0, 0);
+        }
+        else if(dashTime > 0)
+        {
+            rb.velocity = new Vector2(facingDirection * dashSpeed, 0);
         } else
         {
             rb.velocity = new Vector2(xInput * moveSpeed, rb.velocity.y);
@@ -67,9 +78,20 @@ public class Player : MonoBehaviour
     private void CheckInput()
     {
         xInput = Input.GetAxisRaw("Horizontal");
+
+        if(Input.GetKeyDown(KeyCode.Mouse0))
+        {
+            StartAttackEvent();
+        }
+
         if (Input.GetKeyDown(KeyCode.Space))
         {
             Jump();
+        }
+
+        if (Input.GetKeyDown(KeyCode.LeftShift))
+        {
+            DashAbility();
         }
     }
 
@@ -93,11 +115,14 @@ public class Player : MonoBehaviour
             isMoving = false;
         }*/
 
+        anim.SetInteger("comboCounter", comboCounter);
+
         anim.SetFloat("yVelocity", rb.velocity.y);
 
         anim.SetBool("isMoving", isMoving);
         anim.SetBool("isGrounded", isGrounded);
         anim.SetBool("isDashing", dashTime > 0);
+        anim.SetBool("isAttacking", isAttacking);
     }
 
     private void FlipFacing()
@@ -127,5 +152,38 @@ public class Player : MonoBehaviour
     private void CheckCollisionGround()
     {
         isGrounded = Physics2D.Raycast(transform.position, Vector2.down, groundCheckDistance, whatIsGround);
+    }
+
+    private void DashAbility()
+    {
+        if(dashCooldownTimer < 0 && !isAttacking)
+        {
+            dashCooldownTimer = dashCooldown;
+            dashTime = dashDuration;
+        }
+    }
+
+    public void AttackOver()
+    {
+        isAttacking = false;
+        comboCounter++;
+        if(comboCounter > 2)
+        {
+            comboCounter = 0;
+        }
+    }
+
+    private void StartAttackEvent()
+    {
+        if(!isGrounded)
+        {
+            return;
+        }
+        if (comboTimeCounter < 0)
+        {
+            comboCounter = 0;
+        }
+        isAttacking = true;
+        comboTimeCounter = comboTime;
     }
 }
