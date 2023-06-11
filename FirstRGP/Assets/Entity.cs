@@ -31,10 +31,10 @@ public class Entity : MonoBehaviour
     // Update is called once per frame
     protected virtual void Update()
     {
-        CheckCollisionGround();
+        CheckCollision();
     }
 
-    protected virtual void CheckCollisionGround()
+    protected virtual void CheckCollision()
     {
         isGrounded = Physics2D.Raycast(groundCheck.position, Vector2.down, groundCheckDistance, whatIsGround);
         isWallDetected = Physics2D.Raycast(wallCheck.position, Vector2.right, wallCheckDistance * facingDirection, whatIsGround);
