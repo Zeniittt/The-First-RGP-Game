@@ -29,6 +29,11 @@ public class Player : Entity
     protected override void Start()
     {
         base.Start();
+
+        if(wallCheck == null)
+        {
+            wallCheck = transform;
+        }
     }
 
     // Update is called once per frame
